@@ -36,7 +36,7 @@ class Sudoku(object):
             for c in xrange(n):
                 number = puzzle[r][c]
                 if number:
-                    self.possible[r][c] = {number}
+                    self.possible[r][c] = set([number])
                 else:
                     self.possible[r][c] = DOMAIN - \
                         self.rows[r] - \
@@ -56,8 +56,6 @@ class Sudoku(object):
         max_depth = depth
         max_branch = cur_branch = 0
         while self.queue:
-            cur_branch += 1
-            max_branch = max(cur_branch, max_branch)
             r, c, v = self.queue.popleft()
             if self.ans[r][c] == v:
                 continue
@@ -65,9 +63,9 @@ class Sudoku(object):
             self.rows[r].add(v)
             self.cols[c].add(v)
             self.squares[self.get_square_num(r, c)].add(v)
-            self.possible[r][c] = {v}
-            recheck_cells = {(r, i) for i in xrange(len(self.puzzle))} | \
-                {(i, c) for i in xrange(len(self.puzzle))} | \
+            self.possible[r][c] = set([v])
+            recheck_cells = set((r, i) for i in xrange(len(self.puzzle))) | \
+                set((i, c) for i in xrange(len(self.puzzle))) | \
                 self.same_square(r, c)
             recheck_cells.remove((r, c))
             for r, c in recheck_cells:
@@ -83,6 +81,8 @@ class Sudoku(object):
 
         r, c = self.get_most_constrained()
         for v in self.possible[r][c]:
+            cur_branch += 1
+            max_branch = max(cur_branch, max_branch)
             try:
                 other = cPickle.loads(
                     cPickle.dumps(self, cPickle.HIGHEST_PROTOCOL))
