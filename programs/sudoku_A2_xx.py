@@ -16,17 +16,17 @@ class Sudoku(object):
         # Faster than copy.deepcopy because we know puzzle is not recursive
         self.ans = [row[:] for row in puzzle]
         m, n = len(puzzle), len(puzzle[0])
-        self.rows = [set() for _ in xrange(m)]
-        self.cols = [set() for _ in xrange(m)]
-        self.squares = [set() for _ in xrange(m)]
+        rows = [set() for _ in xrange(m)]
+        cols = [set() for _ in xrange(m)]
+        squares = [set() for _ in xrange(m)]
 
         for r in xrange(m):
             for c in xrange(n):
                 number = puzzle[r][c]
                 if number:
-                    self.rows[r].add(number)
-                    self.cols[c].add(number)
-                    self.squares[self.get_square_num(r, c)].add(number)
+                    rows[r].add(number)
+                    cols[c].add(number)
+                    squares[self.get_square_num(r, c)].add(number)
 
         self.possible = [[set() for c in xrange(len(puzzle[r]))]
                          for r in xrange(len(puzzle))]
@@ -39,9 +39,9 @@ class Sudoku(object):
                     self.possible[r][c] = set([number])
                 else:
                     self.possible[r][c] = DOMAIN - \
-                        self.rows[r] - \
-                        self.cols[c] - \
-                        self.squares[self.get_square_num(r, c)]
+                        rows[r] - \
+                        cols[c] - \
+                        squares[self.get_square_num(r, c)]
                     if len(self.possible[r][c]) == 1:
                         self.queue.append(
                             (r, c, self.possible[r][c].copy().pop()))
@@ -60,9 +60,6 @@ class Sudoku(object):
             if self.ans[r][c] == v:
                 continue
             self.ans[r][c] = v
-            self.rows[r].add(v)
-            self.cols[c].add(v)
-            self.squares[self.get_square_num(r, c)].add(v)
             self.possible[r][c] = set([v])
             recheck_cells = set((r, i) for i in xrange(len(self.puzzle))) | \
                 set((i, c) for i in xrange(len(self.puzzle))) | \
