@@ -2,7 +2,6 @@
 Sudoku solver
 """
 
-import cPickle
 import sys
 import copy
 from collections import deque
@@ -11,7 +10,14 @@ DOMAIN = set(range(1, 10))
 
 
 class Sudoku(object):
-    def __init__(self, puzzle):
+    def __init__(self, puzzle, **kwargs):
+        if kwargs:
+            self.ans = kwargs["ans"]
+            self.possible = kwargs["possible"]
+            self.puzzle = puzzle
+            self.queue = kwargs["queue"]
+            return
+
         self.puzzle = puzzle  # self.puzzle is a list of lists
         # Faster than copy.deepcopy because we know puzzle is not recursive
         self.ans = [row[:] for row in puzzle]
@@ -30,7 +36,7 @@ class Sudoku(object):
 
         self.possible = [[set() for c in xrange(len(puzzle[r]))]
                          for r in xrange(len(puzzle))]
-        self.queue = deque([])
+        self.queue = deque()
         # Initialise possibilities
         for r in xrange(m):
             for c in xrange(n):
@@ -80,11 +86,9 @@ class Sudoku(object):
         for v in self.possible[r][c]:
             cur_branch += 1
             max_branch = max(cur_branch, max_branch)
-            try:
-                other = cPickle.loads(
-                    cPickle.dumps(self, cPickle.HIGHEST_PROTOCOL))
-            except cPickle.PicklingError:
-                other = copy.deepcopy(self)
+
+            other = self.copy()
+
             other.queue.append((r, c, v))
             result, d, b = other.recurse_solve(depth + 1)
             max_depth = max(d, max_depth)
@@ -92,6 +96,13 @@ class Sudoku(object):
             if result:
                 return (result, max_depth, max_branch)
         return (False, max_depth, max_branch)
+
+    def copy(self):
+        return Sudoku(self.puzzle,
+                      ans=[row[:] for row in self.ans],
+                      possible=[[set(cell) for cell in row]
+                                for row in self.possible],
+                      queue=deque(self.queue))
 
     # you may add more classes/functions if you think is useful
     # However, ensure all the classes/functions are in this file ONLY
