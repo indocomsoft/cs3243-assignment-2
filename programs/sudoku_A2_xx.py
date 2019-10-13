@@ -1,31 +1,41 @@
+"""
+Sudoku solver
+"""
+
+import cPickle
 import sys
 import copy
 from collections import deque
 
-DOMAIN = set(range(1,10))
+DOMAIN = set(range(1, 10))
+
 
 class Sudoku(object):
     def __init__(self, puzzle):
-        self.puzzle = puzzle # self.puzzle is a list of lists
-        self.ans = copy.deepcopy(puzzle) # self.ans is a list of lists
-        self.rows = [set() for i in xrange(len(puzzle))]
-        self.cols = [set() for i in xrange(len(puzzle))]
-        self.squares = [set() for i in xrange(len(puzzle))]
-        for r in xrange(len(puzzle)):
-            for c in xrange(len(puzzle[r])):
+        self.puzzle = puzzle  # self.puzzle is a list of lists
+        # Faster than copy.deepcopy because we know puzzle is not recursive
+        self.ans = [row[:] for row in puzzle]
+        m, n = len(puzzle), len(puzzle[0])
+        self.rows = [set() for _ in xrange(m)]
+        self.cols = [set() for _ in xrange(m)]
+        self.squares = [set() for _ in xrange(m)]
+
+        for r in xrange(m):
+            for c in xrange(n):
                 number = puzzle[r][c]
-                if number != 0:
+                if number:
                     self.rows[r].add(number)
                     self.cols[c].add(number)
                     self.squares[self.get_square_num(r, c)].add(number)
 
-        self.possible = [[set() for c in xrange(len(puzzle[r]))] for r in xrange(len(puzzle))]
+        self.possible = [[set() for c in xrange(len(puzzle[r]))]
+                         for r in xrange(len(puzzle))]
         self.queue = deque([])
         # Initialise possibilities
-        for r in xrange(len(puzzle)):
-            for c in xrange(len(puzzle[r])):
+        for r in xrange(m):
+            for c in xrange(n):
                 number = puzzle[r][c]
-                if number != 0:
+                if number:
                     self.possible[r][c] = {number}
                 else:
                     self.possible[r][c] = DOMAIN - \
@@ -33,7 +43,8 @@ class Sudoku(object):
                         self.cols[c] - \
                         self.squares[self.get_square_num(r, c)]
                     if len(self.possible[r][c]) == 1:
-                        self.queue.append((r, c, self.possible[r][c].copy().pop()))
+                        self.queue.append(
+                            (r, c, self.possible[r][c].copy().pop()))
 
     def solve(self):
         while self.queue:
@@ -44,24 +55,29 @@ class Sudoku(object):
             self.rows[r].add(v)
             self.cols[c].add(v)
             self.squares[self.get_square_num(r, c)].add(v)
-            self.possible[r][c] = { v }
+            self.possible[r][c] = {v}
             recheck_cells = {(r, i) for i in xrange(len(self.puzzle))} | \
                 {(i, c) for i in xrange(len(self.puzzle))} | \
                 self.same_square(r, c)
             recheck_cells.remove((r, c))
             for r, c in recheck_cells:
                 self.possible[r][c].discard(v)
-                if len(self.possible[r][c]) == 0:
+                if not self.possible[r][c]:
                     return False
                 if len(self.possible[r][c]) == 1 and self.ans[r][c] == 0:
                     self.queue.append((r, c, self.possible[r][c].copy().pop()))
 
-        if self.is_complete():
+        # If already complete
+        if all(0 not in row for row in self.ans):
             return self.ans
 
         r, c = self.get_most_constrained()
         for v in self.possible[r][c]:
-            other = copy.deepcopy(self)
+            try:
+                other = cPickle.loads(
+                    cPickle.dumps(self, cPickle.HIGHEST_PROTOCOL))
+            except cPickle.PicklingError:
+                other = copy.deepcopy(self)
             other.queue.append((r, c, v))
             result = other.solve()
             if result:
@@ -73,17 +89,20 @@ class Sudoku(object):
     def get_square_num(self, r, c):
         return 3 * (r // 3) + c // 3
 
-    def same_square(self, r, c):
+    def same_square(self, r, c, memo={}):
+        if (r, c) in memo:
+            return memo[(r, c)]
         square_num = self.get_square_num(r, c)
         top_left_r = 0 + square_num // 3 * 3
         top_left_c = 0 + square_num % 3 * 3
-        return set((top_left_r + r, top_left_c + c) for c in xrange(3) for r in xrange(3))
-
-    def is_complete(self):
-        return all(map(lambda row: 0 not in row, self.ans))
+        result = set((top_left_r + r, top_left_c + c) for c in xrange(3)
+                     for r in xrange(3))
+        memo[(r, c)] = result
+        return result
 
     def get_most_constrained(self):
         candidate = ((0, 0), 9)
+        n = len(self.puzzle)
         for r in xrange(len(self.puzzle)):
             for c in xrange(len(self.puzzle)):
                 cur_len = len(self.possible[r][c])
@@ -91,16 +110,17 @@ class Sudoku(object):
                     candidate = ((r, c), cur_len)
         return candidate[0]
 
-if __name__ == "__main__":
+
+def main():
     # STRICTLY do NOT modify the code in the main function here
     if len(sys.argv) != 3:
-        print ("\nUsage: python sudoku_A2_xx.py input.txt output.txt\n")
+        print("\nUsage: python sudoku_A2_xx.py input.txt output.txt\n")
         raise ValueError("Wrong number of arguments!")
 
     try:
         f = open(sys.argv[1], 'r')
     except IOError:
-        print ("\nUsage: python sudoku_A2_xx.py input.txt output.txt\n")
+        print("\nUsage: python sudoku_A2_xx.py input.txt output.txt\n")
         raise IOError("Input file not found!")
 
     puzzle = [[0 for i in range(9)] for j in range(9)]
@@ -124,3 +144,7 @@ if __name__ == "__main__":
             for j in range(9):
                 f.write(str(ans[i][j]) + " ")
             f.write("\n")
+
+
+if __name__ == "__main__":
+    main()
