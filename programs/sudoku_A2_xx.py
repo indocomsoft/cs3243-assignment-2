@@ -47,7 +47,17 @@ class Sudoku(object):
                             (r, c, self.possible[r][c].copy().pop()))
 
     def solve(self):
+        result, max_depth, max_branch = self.recurse_solve(0)
+        print("max_depth = {0}, max_branch = {1}".format(
+            max_depth, max_branch))
+        return result
+
+    def recurse_solve(self, depth):
+        max_depth = depth
+        max_branch = cur_branch = 0
         while self.queue:
+            cur_branch += 1
+            max_branch = max(cur_branch, max_branch)
             r, c, v = self.queue.popleft()
             if self.ans[r][c] == v:
                 continue
@@ -63,13 +73,13 @@ class Sudoku(object):
             for r, c in recheck_cells:
                 self.possible[r][c].discard(v)
                 if not self.possible[r][c]:
-                    return False
+                    return (False, max_depth, max_branch)
                 if len(self.possible[r][c]) == 1 and self.ans[r][c] == 0:
                     self.queue.append((r, c, self.possible[r][c].copy().pop()))
 
         # If already complete
         if all(0 not in row for row in self.ans):
-            return self.ans
+            return (self.ans, max_depth, max_branch)
 
         r, c = self.get_most_constrained()
         for v in self.possible[r][c]:
@@ -79,10 +89,12 @@ class Sudoku(object):
             except cPickle.PicklingError:
                 other = copy.deepcopy(self)
             other.queue.append((r, c, v))
-            result = other.solve()
+            result, d, b = other.recurse_solve(depth + 1)
+            max_depth = max(d, max_depth)
+            max_branch = max(b, max_branch)
             if result:
-                return result
-        return False
+                return (result, max_depth, max_branch)
+        return (False, max_depth, max_branch)
 
     # you may add more classes/functions if you think is useful
     # However, ensure all the classes/functions are in this file ONLY
