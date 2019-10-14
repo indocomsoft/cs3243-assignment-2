@@ -34,6 +34,7 @@ class Sudoku(object):
         self.possible = [[set() for c in xrange(len(puzzle[r]))]
                          for r in xrange(len(puzzle))]
         self.queue = deque()
+        self.in_queue = set()
         # Initialise possibilities
         for r in xrange(m):
             for c in xrange(n):
@@ -48,6 +49,7 @@ class Sudoku(object):
                     if len(self.possible[r][c]) == 1:
                         self.queue.append(
                             (r, c, self.possible[r][c].copy().pop()))
+                        self.in_queue.add((r, c))
 
     def solve(self):
         result, max_depth, max_branch = self.recurse_solve(0)
@@ -60,8 +62,7 @@ class Sudoku(object):
         max_branch = cur_branch = 0
         while self.queue:
             r, c, v = self.queue.popleft()
-            if self.ans[r][c] == v:
-                continue
+            self.in_queue.remove((r, c))
             self.ans[r][c] = v
             self.possible[r][c] = set([v])
             recheck_cells = set((r, i) for i in xrange(len(self.ans))) | \
@@ -72,8 +73,11 @@ class Sudoku(object):
                 self.possible[r][c].discard(v)
                 if not self.possible[r][c]:
                     return (False, max_depth, max_branch)
-                if len(self.possible[r][c]) == 1 and self.ans[r][c] == 0:
+                if len(self.possible[r][c]) == 1 and \
+                        self.ans[r][c] == 0 and \
+                        (r, c) not in self.in_queue:
                     self.queue.append((r, c, self.possible[r][c].copy().pop()))
+                    self.in_queue.add((r, c))
 
         # If already complete
         if all(0 not in row for row in self.ans):
@@ -87,6 +91,7 @@ class Sudoku(object):
             other = self.copy()
 
             other.queue = deque([(r, c, v)])
+            other.in_queue = set([(r, c)])
             result, d, b = other.recurse_solve(depth + 1)
             max_depth = max(d, max_depth)
             max_branch = max(b, max_branch)
