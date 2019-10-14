@@ -47,8 +47,8 @@ class Sudoku(object):
                         cols[c] - \
                         squares[self.get_square_num(r, c)]
                     if len(self.possible[r][c]) == 1:
-                        self.queue.append(
-                            (r, c, self.possible[r][c].copy().pop()))
+                        (v,) = self.possible[r][c]
+                        self.queue.append((r, c, v))
                         self.in_queue.add((r, c))
 
     def solve(self):
@@ -76,7 +76,8 @@ class Sudoku(object):
                 if len(self.possible[r][c]) == 1 and \
                         self.ans[r][c] == 0 and \
                         (r, c) not in self.in_queue:
-                    self.queue.append((r, c, self.possible[r][c].copy().pop()))
+                    (v_,) = self.possible[r][c]
+                    self.queue.append((r, c, v_))
                     self.in_queue.add((r, c))
 
         # If already complete
@@ -124,8 +125,8 @@ class Sudoku(object):
     def get_most_constrained(self):
         candidate = ((0, 0), 9)
         n = len(self.ans)
-        for r in xrange(len(self.ans)):
-            for c in xrange(len(self.ans)):
+        for r in xrange(n):
+            for c in xrange(n):
                 cur_len = len(self.possible[r][c])
                 if 1 < cur_len < candidate[1]:
                     candidate = ((r, c), cur_len)
