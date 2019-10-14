@@ -14,11 +14,8 @@ class Sudoku(object):
         if kwargs:
             self.ans = kwargs["ans"]
             self.possible = kwargs["possible"]
-            self.puzzle = puzzle
-            self.queue = kwargs["queue"]
             return
 
-        self.puzzle = puzzle  # self.puzzle is a list of lists
         # Faster than copy.deepcopy because we know puzzle is not recursive
         self.ans = [row[:] for row in puzzle]
         m, n = len(puzzle), len(puzzle[0])
@@ -67,8 +64,8 @@ class Sudoku(object):
                 continue
             self.ans[r][c] = v
             self.possible[r][c] = set([v])
-            recheck_cells = set((r, i) for i in xrange(len(self.puzzle))) | \
-                set((i, c) for i in xrange(len(self.puzzle))) | \
+            recheck_cells = set((r, i) for i in xrange(len(self.ans))) | \
+                set((i, c) for i in xrange(len(self.ans))) | \
                 self.same_square(r, c)
             recheck_cells.remove((r, c))
             for r, c in recheck_cells:
@@ -89,7 +86,7 @@ class Sudoku(object):
 
             other = self.copy()
 
-            other.queue.append((r, c, v))
+            other.queue = deque([(r, c, v)])
             result, d, b = other.recurse_solve(depth + 1)
             max_depth = max(d, max_depth)
             max_branch = max(b, max_branch)
@@ -98,11 +95,10 @@ class Sudoku(object):
         return (False, max_depth, max_branch)
 
     def copy(self):
-        return Sudoku(self.puzzle,
+        return Sudoku(None,
                       ans=[row[:] for row in self.ans],
                       possible=[[set(cell) for cell in row]
-                                for row in self.possible],
-                      queue=deque(self.queue))
+                                for row in self.possible])
 
     # you may add more classes/functions if you think is useful
     # However, ensure all the classes/functions are in this file ONLY
@@ -122,9 +118,9 @@ class Sudoku(object):
 
     def get_most_constrained(self):
         candidate = ((0, 0), 9)
-        n = len(self.puzzle)
-        for r in xrange(len(self.puzzle)):
-            for c in xrange(len(self.puzzle)):
+        n = len(self.ans)
+        for r in xrange(len(self.ans)):
+            for c in xrange(len(self.ans)):
                 cur_len = len(self.possible[r][c])
                 if 1 < cur_len < candidate[1]:
                     candidate = ((r, c), cur_len)
