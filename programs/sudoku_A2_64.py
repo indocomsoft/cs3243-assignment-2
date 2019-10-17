@@ -6,7 +6,7 @@ import sys
 import copy
 from collections import deque
 
-DOMAIN = set(range(1, 10))
+DOMAIN = set(xrange(1, 10))
 SAME_SQUARE = []
 for square_num in xrange(9):
     top_left_r = 0 + square_num // 3 * 3
@@ -57,14 +57,9 @@ class Sudoku(object):
                         self.in_queue.add((r, c))
 
     def solve(self):
-        result, max_depth, max_branch = self.recurse_solve(0)
-        print("max_depth = {0}, max_branch = {1}".format(
-            max_depth, max_branch))
-        return result
+        return self.recurse_solve()
 
-    def recurse_solve(self, depth):
-        max_depth = depth
-        max_branch = cur_branch = 0
+    def recurse_solve(self):
         while self.queue:
             r, c, v = self.queue.popleft()
             self.in_queue.remove((r, c))
@@ -77,7 +72,7 @@ class Sudoku(object):
             for r, c in recheck_cells:
                 self.possible[r][c].discard(v)
                 if not self.possible[r][c]:
-                    return (False, max_depth, max_branch)
+                    return False
                 if len(self.possible[r][c]) == 1 and \
                         self.ans[r][c] == 0 and \
                         (r, c) not in self.in_queue:
@@ -87,23 +82,18 @@ class Sudoku(object):
 
         # If already complete
         if all(0 not in row for row in self.ans):
-            return (self.ans, max_depth, max_branch)
+            return self.ans
 
         r, c = self.get_most_constrained()
         for v in self.possible[r][c]:
-            cur_branch += 1
-            max_branch = max(cur_branch, max_branch)
-
             other = self.copy()
 
             other.queue = deque([(r, c, v)])
             other.in_queue = set([(r, c)])
-            result, d, b = other.recurse_solve(depth + 1)
-            max_depth = max(d, max_depth)
-            max_branch = max(b, max_branch)
+            result= other.recurse_solve()
             if result:
-                return (result, max_depth, max_branch)
-        return (False, max_depth, max_branch)
+                return result
+        return False
 
     def copy(self):
         return Sudoku(None,
