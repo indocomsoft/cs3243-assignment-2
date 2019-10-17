@@ -47,7 +47,7 @@ class Sudoku(object):
                         cols[c] - \
                         squares[self.get_square_num(r, c)]
                     if len(self.possible[r][c]) == 1:
-                        (v,) = self.possible[r][c]
+                        (v, ) = self.possible[r][c]
                         self.queue.append((r, c, v))
                         self.in_queue.add((r, c))
 
@@ -76,7 +76,7 @@ class Sudoku(object):
                 if len(self.possible[r][c]) == 1 and \
                         self.ans[r][c] == 0 and \
                         (r, c) not in self.in_queue:
-                    (v_,) = self.possible[r][c]
+                    (v_, ) = self.possible[r][c]
                     self.queue.append((r, c, v_))
                     self.in_queue.add((r, c))
 
@@ -133,7 +133,7 @@ class Sudoku(object):
         return candidate[0]
 
 
-def main():
+if __name__ == "__main__":
     # STRICTLY do NOT modify the code in the main function here
     if len(sys.argv) != 3:
         print("\nUsage: python sudoku_A2_xx.py input.txt output.txt\n")
@@ -166,7 +166,3 @@ def main():
             for j in range(9):
                 f.write(str(ans[i][j]) + " ")
             f.write("\n")
-
-
-if __name__ == "__main__":
-    main()
