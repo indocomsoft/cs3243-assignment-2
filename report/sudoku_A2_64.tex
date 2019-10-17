@@ -88,7 +88,7 @@ Thus, we can get the most performance boost by optimising the copy.
 Initially, we tried using the \texttt{cPickle.dumps} and \texttt{cPickle.loads} methods in-memory.
 Immediately we gain an improvement that cuts the run-time by a factor of 4.
 However, the time spent copying still accounts for 65\% of our runtime.
-So instead, we change the \texttt{Sudoku} class initialiser to take in keyword arguments, and allow keyword arguments to override states instead of calculating them from the \texttt{puzzle} that is passed in.
+So instead, we change the \texttt{Sudoku} class initialiser to take in keyword arguments, and allow immediate assignment of keyword arguments to class members instead of calculating them from the \texttt{puzzle} that is passed in.
 Copying is achieved by copying each of the state (instance attributes), and passing them to the initializer.
-This is the final method that we use in our solver, with the copying only taking about 11\% of the total running time, which is faster by about a factor of 8 compared to our original solver. Just for good measures, we also memoised the function \texttt{same\_square} since the function is pure.
+This is the final method that we use in our solver, with the copying only taking about 11\% of the total running time, which is faster by about a factor of 8 compared to our original solver. Just for good measure, we also memoised the function \texttt{same\_square} since the function is pure.
 \end{document}
