@@ -19,34 +19,70 @@
 
 
 \begin{document}
+\section{Algorithm used}
+We model the sudoku puzzle as a constraint satisfaction problem (CSP).
+The algorithm used is constraint propagation and backtracking with minimum-remaining-value (MRV) heuristic.
+We will explain the algorithm more in depth below.
 
-Algorithm:
-Phase 1: Initialisation
-\begin{compactitem}
-  \item[Step 1:] Traverse the input puzzle to generate lists of sets containing non-zero numbers in each row, column and subsquare.
-  \item[Step 2:] Generate possible values for each cell using set difference of the domain and the existing numbers in the cell's row/column/subsquare as derived in step 1.
-  \item[] During this step, if any zero-value cell has a possibility set of size 1, push the cell's coordinates and its sole possible value onto a queue for processing in Phase 2.
-  Phase 2: Set value and propagate constraint
-  \begin{compactitem}
-    \item[] While queue has elements:
-    \item[Step 1:] Pop from queue to get cell coordinates and value $v$.
-    \item[Step 2:] Set the cell in the answer matrix to $v$.
-    \item[Step 3:] For each cell in the same row, column or subsquare:
-    \item[Step 3a:] Remove $v$ from its set of possibilities.
-    \item[Step 3b:] If the cell's possibility set size is 1 and its coordinates are not in the queue and its value in the answer matrix is zero:
-    \item[] Push the cell's coordinates and its sole possible value onto the queue.
-  \end{compactitem}
+\subsection{Initialisation}
+\label{phase:1}
+\begin{enumerate}
+  \item Traverse the input puzzle to generate lists of sets containing non-zero numbers in each row, column and 3x3 subgrids.
+  \item Generate the set of possible values for each cell using the set difference of the domain of each cell ($[1, 9]$) and the existing numbers in the same row, column and 3x3 subgrid as the cell (this was computed in step 1).
 
-  Phase 3: Backtracking
-  \begin{compactitem}
-    \item[Step 1:] Find the cell with possibility set with the smallest possibility set size, and also size > 1.
-    \item[Step 2:] Spawn a copy of the current solver object, push a possibile value onto its queue and return to step 2. Return result if valid, backtrack to next possible value if invalid.
-  \end{compactitem}
+        During this step, if any empty cell (value = 0) has a possibility set of size 1, push the cell's coordinates and its sole possible value onto a queue for constraint propagation in Phase \ref{phase:2}.
+\end{enumerate}
 
-  Complexity Analysis:
-  Let $n$ be the dimension of the puzzle i.e. 9.
-  Time: Each step of the initialisation is $O(n^2)$ as they each traverse the puzzle once. In Phase 2 constraint propagation, when a cell's value is set, updating for same row, column and subsquare take $O(n)$ each. This is a constant $O(3n)$ which reduces to $O(n)$. The number of times this has to be done is one for each cell in the puzzle, giving a total of $O(n^3)$ in the ideal case without backtracking.
-  Space: Each instance of the solver object has stores the answer matrix and the queue. The queue will not have duplicate elements so the queue's size is $O(n^2)$. The lists of sets used in Phase 1 Step 1 are also $O(n^2)$ each. Hence each instance of the solver object takse $O(n^2)$ space.
-  Backtracking is depth-first search. For the provided puzzle, our recursion depth was 16. Hence we store at most $16O(n^2)$.
-\end{compactitem}
+
+\subsection{Set value and propagate constraint}
+\label{phase:2}
+While the queue is not empty:
+\begin{enumerate}
+  \item Pop from queue to get cell coordinates and value $v$.
+  \item Set the cell in the answer matrix to $v$.
+  \item For each cell in the same row, column or 3x3 subgrid:
+        \begin{enumerate}
+          \item Remove $v$ from its set of possibilities.
+          \item If the cell's possibility set is empty, stop this phase as it means that the answer matrix has an inconsistent assignment. Note that if this phase is called from Phase \ref{phase:3}, this will result in backtracking.
+          \item If the cell's possibility set size is 1 and its coordinates are not in the queue and its value in the answer matrix is zero (not assigned yet): push the cell's coordinates and its sole possible value onto the queue.
+        \end{enumerate}
+\end{enumerate}
+
+\subsection{Backtracking}
+\label{phase:3}
+\begin{enumerate}
+  \item Find the cell with possibility set with the smallest possibility set size and size $>$ 1 (if the size is 1, then the cell has already been assigned a value).
+  \item Create a copy of the current solver object, push a possible value onto its queue and return to Phase \ref{phase:2}.
+  \item If the result is a complete and consistent assignment, return it. Otherwise, backtrack to next possible value.
+\end{enumerate}
+
+\section{Complexity Analysis}
+Let $n$ be the dimension of the puzzle i.e. 9.
+
+\subsection{Time Complexity}
+Each step of the initialisation is $O(n^2)$ as they each traverse the puzzle once.
+In Phase \ref{phase:2} constraint propagation, when a cell's value is set, updating for same row, column and 3x3 subgrid take $O(n)$ each.
+This takes $3n$ steps which reduces to $O(n)$.
+This has to be done once for each cell in the puzzle, giving a total of $O(n^3)$ in the ideal case without backtracking.
+\subsection{Space Complexity}
+Each instance of the solver object has stores the answer matrix and the queue of values to propagate.
+The queue will not have duplicate elements so in the worst case, the queue's size is $O(n^2)$.
+The sets of possible values each has a constant size of the whole domain of the worst case, thus their size is $O(1)$.
+Since each cell has an associated set, in total the size of all the sets is $O(n^2)$/
+Hence each instance of the solver object takes $O(n^2)$ space.
+
+Backtracking is depth-first search.
+For the provided puzzle, our recursion depth was 16. Hence we store at most $16O(n^2)$.
+
+\section{Optimisation}
+When we first implemented the algorithm, we had a lot of instance attributes in the \texttt{Solver} class which turned out to be redundant.
+Removing these instance attributes allowed us to obtain some speedup as there are less attributes to be copied in Phase \ref{phase:3} during backtracking search.
+
+To ease implementation, we also made use of Python's built-in \texttt{copy.deepcopy} function.
+While it is convenient, it is also highly inefficient as it is designed very broadly.
+For example, it keeps a memoisation table to be able to perform deep copying of recursive data structures.
+We know for a fact that we have no such recursive data structures in our solver, thus using other constructs to copy is so much faster.
+
+In fact, when we use the built-in Python \texttt{cProfile} module to profile our solver, most of the time was spent on performing \texttt{copy.deepcopy} during Phase \ref{phase:3}
 \end{document}
+
