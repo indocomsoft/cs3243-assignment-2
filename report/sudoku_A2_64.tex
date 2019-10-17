@@ -83,6 +83,12 @@ While it is convenient, it is also highly inefficient as it is designed very bro
 For example, it keeps a memoisation table to be able to perform deep copying of recursive data structures.
 We know for a fact that we have no such recursive data structures in our solver, thus using other constructs to copy is so much faster.
 
-In fact, when we use the built-in Python \texttt{cProfile} module to profile our solver, most of the time was spent on performing \texttt{copy.deepcopy} during Phase \ref{phase:3}
+In fact, when we use the built-in Python \texttt{cProfile} module to profile our solver, most of the time was spent on performing \texttt{copy.deepcopy} during Phase \ref{phase:3} (more than 75\% from our profiling).
+Thus, we can get the most performance boost by optimising the copy.
+Initially, we tried using the \texttt{cPickle.dumps} and \texttt{cPickle.loads} methods in-memory.
+Immediately we gain an improvement that cuts the run-time by a factor of 4.
+However, the time spent copying still accounts for 65\% of our runtime.
+So instead, we change the \texttt{Sudoku} class initialiser to take in keyword arguments, and allow keyword arguments to override states instead of calculating them from the \texttt{puzzle} that is passed in.
+Copying is achieved by copying each of the state (instance attributes), and passing them to the initializer.
+This is the final method that we use in our solver, with the copying only taking about 11\% of the total running time, which is faster by about a factor of 8 compared to our original solver. Just for good measures, we also memoised the function \texttt{same\_square} since the function is pure.
 \end{document}
-
