@@ -23,12 +23,12 @@ class Sudoku(object):
 
         # Faster than copy.deepcopy because we know puzzle is not recursive
         self.ans = [row[:] for row in puzzle]
-        m, n = len(puzzle), len(puzzle[0])
-        rows = [set() for _ in xrange(m)]
-        cols = [set() for _ in xrange(m)]
-        squares = [set() for _ in xrange(m)]
+        n = len(puzzle)
+        rows = [set() for _ in xrange(n)]
+        cols = [set() for _ in xrange(n)]
+        squares = [set() for _ in xrange(n)]
 
-        for r in xrange(m):
+        for r in xrange(n):
             for c in xrange(n):
                 number = puzzle[r][c]
                 if number:
@@ -41,7 +41,7 @@ class Sudoku(object):
         self.queue = deque()
         self.in_queue = set()
         # Initialise possibilities
-        for r in xrange(m):
+        for r in xrange(n):
             for c in xrange(n):
                 number = puzzle[r][c]
                 if number:
@@ -72,7 +72,7 @@ class Sudoku(object):
             self.possible[r][c] = set([v])
             recheck_cells = set((r, i) for i in xrange(len(self.ans))) | \
                 set((i, c) for i in xrange(len(self.ans))) | \
-                self.same_square(r, c)
+                SAME_SQUARE[self.get_square_num(r, c)]
             recheck_cells.remove((r, c))
             for r, c in recheck_cells:
                 self.possible[r][c].discard(v)
@@ -116,11 +116,8 @@ class Sudoku(object):
     def get_square_num(self, r, c):
         return 3 * (r // 3) + c // 3
 
-    def same_square(self, r, c):
-        return SAME_SQUARE[self.get_square_num(r, c)]
-
     def get_most_constrained(self):
-        candidate = ((0, 0), 9)
+        candidate = ((), 9)
         n = len(self.ans)
         for r in xrange(n):
             for c in xrange(n):
