@@ -7,7 +7,12 @@ import copy
 from collections import deque
 
 DOMAIN = set(range(1, 10))
-
+SAME_SQUARE = []
+for square_num in xrange(9):
+    top_left_r = 0 + square_num // 3 * 3
+    top_left_c = 0 + square_num % 3 * 3
+    SAME_SQUARE.append(set((top_left_r + r, top_left_c + c) for c in xrange(3)
+                 for r in xrange(3)))
 
 class Sudoku(object):
     def __init__(self, puzzle, **kwargs):
@@ -111,16 +116,8 @@ class Sudoku(object):
     def get_square_num(self, r, c):
         return 3 * (r // 3) + c // 3
 
-    def same_square(self, r, c, memo={}):
-        if (r, c) in memo:
-            return memo[(r, c)]
-        square_num = self.get_square_num(r, c)
-        top_left_r = 0 + square_num // 3 * 3
-        top_left_c = 0 + square_num % 3 * 3
-        result = set((top_left_r + r, top_left_c + c) for c in xrange(3)
-                     for r in xrange(3))
-        memo[(r, c)] = result
-        return result
+    def same_square(self, r, c):
+        return SAME_SQUARE[self.get_square_num(r, c)]
 
     def get_most_constrained(self):
         candidate = ((0, 0), 9)
