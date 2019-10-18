@@ -60,21 +60,32 @@ While the queue is not empty:
 Let $n$ be the dimension of the puzzle i.e. 9.
 
 \subsection{Time Complexity}
-In the initialisation phase, generating the set difference for a cell is $O(domain)$, which is $O(n)$. Doing so for all $n^2$ cells gives us a total complexity of $O(n^3)$.
+In the initialisation phase, the time complexity for generating the set difference for a cell is bounded by the domain, which is $n$.
+Doing so for all $n^2$ cells gives us a total complexity of $O(n^2)$.
 In Phase \ref{phase:2} constraint propagation, when a cell's value is set, updating for same row, column and 3x3 subgrid takes $O(n)$ each.
-This takes $3n$ steps which reduces to $O(n)$.
+This takes $3n$ steps which is bounded by $O(n)$.
 This has to be done once for each cell in the puzzle, giving a total of $O(n^3)$ in the ideal case without backtracking.
-For backtracking, the worst case is that nothing can be calculated from constraint propagation and the whole program is pure backtracking. In that case, the branching factor is the domain size, $O(n)$ and the maximum depth is the number of cells, $n^2$, giving a worst case runtime of $O(n^n^2)$.
-This is, of course, unrealistic. For the provided puzzle, the backtracking branching factor was at most 2, with a maximum depth of 16. Profiling also revealed that there were 253 calls made to the recursive solve function, which we can round to 256. All the constraint propagation work done to arrive at the correct answer is found in a single walk down the binary recursion tree, which is 16 nodes. Hence the total constraint propagation work done across all recursive calls is given by $256/16=16O(n^3)$.
+For backtracking, the worst case is that nothing can be calculated from constraint propagation and the whole program is pure backtracking, which happens when all the cells are empty.
+In that case, the branching factor is the domain size, bounded by $n$ and the maximum depth is the number of cells, $n^2$, giving a worst case runtime complexity bound of $O(n^{n^2})$.
+
+This is, of course, not the average case for a sudoku puzzle with only one possible consistent assignment.
+For the provided puzzle which is the supposedly hardest sudoku puzzle, based on our profiling results, the backtracking branching factor was at most 2, with a maximum depth of 16, with 253 calls to the recursive solve function.
+This is much lower than the worst case bound of $O(n^{n^2})$.
+
 \subsection{Space Complexity}
 Each instance of the solver object has stores the answer matrix and the queue of values to propagate.
-The queue will not have duplicate elements so in the worst case, the queue's size is $O(n^2)$.
-The sets of possible values each has a constant size of the whole domain of the worst case, thus their size is $O(1)$.
-Since each cell has an associated set, in total the size of all the sets is $O(n^2)$/
-Hence each instance of the solver object takes $O(n^2)$ space.
-
+The queue will not have duplicate elements so in the worst case, the queue's size is bounded by $O(n^2)$.
+The sets of possible values each has a constant size of the whole domain of the worst case, thus their size is bounded by $O(n)$.
+Since each cell has an associated set, in total the size of all the sets is bounded by $O(n^3)$.
+Hence the size of each instance of the solver object is bounded by $O(n^3)$.
 Backtracking is depth-first search.
-For the provided puzzle, our recursion depth was 16. Hence we store at most $16O(n^2)$.
+In the worst case, the recursion depth is bounded by the number of cells, $O(n^2)$.
+Thus overall, the space complexity is bounded by $O(n^5)$.
+
+However, in reality, again it is not likely that we encounter the worst case scenario for sudoku puzzle with only one possible consistent assignment for reasons mentioned in the previous subsection.
+For the provided puzzle which is the supposedly hardest sudoku puzzle, based on our profiling results, the backtracking recursion depth was 16.
+This is definitely much lower than the worst case bound of $O(n^5)$
+
 
 \section{Optimisation}
 When we first implemented the algorithm, we had a lot of instance attributes in the \texttt{Solver} class which turned out to be redundant.
