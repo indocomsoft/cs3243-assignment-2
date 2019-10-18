@@ -65,8 +65,9 @@ Doing so for all $n^2$ cells gives us a total complexity of $O(n^3)$.
 In Phase \ref{phase:2} constraint propagation, when a cell's value is set, updating for same row, column and 3x3 subgrid takes a total of $3n$ steps which is bounded by $O(n)$.
 This has to be done once for each cell in the puzzle.
 Thus Phase \ref{phase:2} time complexity is bounded by $O(n^3)$ in the ideal case without backtracking.
+
 For backtracking, the worst case is that nothing can be calculated from constraint propagation and the whole program is pure backtracking, which happens when all the cells are empty.
-In that case, the branching factor is the domain size, bounded by $n$ and the maximum depth is the number of cells, $n^2$, giving a worst case runtime complexity bound of $O(n^{n^2})$.
+In that case, the branching factor is the domain size, bounded by $n$, and the maximum depth is the number of cells, $n^2$, giving a worst case runtime complexity bound of $O(n^{n^2})$.
 
 This is, of course, not the average case for a sudoku puzzle with only one possible consistent assignment.
 For the provided puzzle which is the supposedly hardest sudoku puzzle, based on our profiling results, the backtracking branching factor was at most 2, with a maximum depth of 16, with 253 calls to the recursive solve function.
@@ -78,6 +79,7 @@ The queue will not have duplicate elements so in the worst case, the queue's siz
 The sets of possible values each has a constant size of the whole domain of the worst case, thus their size is bounded by $O(n)$.
 Since each cell has an associated set, in total the size of all the sets is bounded by $O(n^3)$.
 Hence the size of each instance of the solver object is bounded by $O(n^3)$.
+
 Backtracking is depth-first search.
 In the worst case, the recursion depth is bounded by the number of cells, $O(n^2)$.
 Thus overall, the space complexity is bounded by $O(n^5)$.
